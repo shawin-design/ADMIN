@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Viewer - CFF Submissions</title>
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+
+    <style>
+        /* --- GENERAL ADMIN STYLES --- */
+        
+        body {
+            background-color: #111;
+            color: #fff;
+            font-family: 'Inter', Arial, sans-serif;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            /* Smooth transition for layout changes */
+        }
+        /* H2 Title Enhancement */
+        
+        h2 {
+            color: #00ffc8;
+            margin-bottom: 20px;
+            /* Added text shadow for glow */
+            text-shadow: 0 0 10px rgba(0, 255, 200, 0.5);
+            letter-spacing: 1px;
+            font-size: 1.8em;
+        }
+        
+        p {
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+        /* --- INTERACTIVE BUTTON STYLING --- */
+        
+        .viewer-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .viewer-btn {
+            background-color: #424242;
+            color: #fff;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            /* Added shadow and transition for pulse effect */
+            box-shadow: 0 0 5px rgba(0, 255, 200, 0.2);
+            transition: all 0.2s ease-in-out;
+            white-space: nowrap;
+            /* Prevent buttons from wrapping text */
+        }
+        
+        .viewer-btn:hover {
+            background-color: #616161;
+            /* Stronger glow and slight lift */
+            box-shadow: 0 0 10px #00ffc8, 0 0 20px rgba(0, 255, 200, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .viewer-btn:active {
+            /* Push down when clicked */
+            transform: translateY(0);
+            box-shadow: 0 0 5px rgba(0, 255, 200, 0.2);
+        }
+        /* --- SEARCH BAR STYLING --- */
+        
+        .search-bar {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            outline: none;
+            background-color: #333;
+            color: #fff;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        
+        .search-bar:focus {
+            /* Neon border/glow when active */
+            border: 1px solid #00ffc8;
+            box-shadow: 0 0 10px rgba(0, 255, 200, 0.6);
+        }
+        /* --- TABLE STYLING --- */
+        
+        .empty-state {
+            color: #9affec;
+            margin: 20px 0;
+        }
+        
+        .table-wrap {
+            overflow-x: auto;
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(0, 255, 200, 0.2);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            cursor: default;
+        }
+        
+        th,
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: left;
+            white-space: nowrap;
+        }
+        
+        th {
+            color: #00ffc8;
+            font-weight: 600;
+            cursor: pointer;
+            position: relative;
+            padding-right: 25px;
+            /* Space for sorting indicator */
+        }
+        
+        tr:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.04);
+        }
+        /* Interactive Row Hover */
+        
+        #submissionsTable tbody tr:hover {
+            background-color: rgba(0, 255, 200, 0.15);
+            transition: background-color 0.3s ease;
+        }
+        /* --- SORTING INDICATOR STYLES --- */
+        
+        #submissionsTable th::after {
+            content: '';
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.5;
+            font-size: 0.8em;
+            color: #00ffc8;
+            transition: opacity 0.3s;
+        }
+        
+        #submissionsTable th.sort-asc::after {
+            content: '▲';
+            opacity: 1;
+        }
+        
+        #submissionsTable th.sort-desc::after {
+            content: '▼';
+            opacity: 1;
+        }
+        /* --- POLYGON GLOW LOGIN STYLES (Neon Green/Cyan) --- */
+        
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            background-color: #000;
+        }
+        
+        .login-box-wrapper {
+            position: relative;
+            z-index: 10;
+            max-width: 450px;
+            width: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        .login-box {
+            background: rgba(17, 17, 17, 0.8);
+            padding: 40px;
+            text-align: center;
+            /* Geometric clip-path */
+            clip-path: polygon(10% 0%, 90% 0%, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0% 90%, 0% 10%);
+            border: 1px solid #00ffc8;
+            box-shadow: 0 0 20px rgba(0, 255, 200, 0.7), inset 0 0 10px rgba(0, 255, 200, 0.5);
+        }
+        
+        .login-box h2 {
+            text-shadow: 0 0 8px #00ffc8;
+            font-size: 2.2em;
+            margin-bottom: 30px;
+        }
+        
+        .login-box input {
+            display: block;
+            margin: 20px auto;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #00ffc8;
+            width: 85%;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 1.1em;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        
+        .login-box input:focus {
+            border-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 255, 200, 0.9);
+        }
+        
+        .login-box button {
+            background: #00ffc8;
+            border: none;
+            padding: 12px 35px;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #111;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-size: 1.1em;
+            margin-top: 30px;
+            box-shadow: 0 0 15px rgba(0, 255, 200, 0.4);
+            transition: all 0.2s ease;
+        }
+        
+        .login-box button:hover {
+            background-color: #9affec;
+            box-shadow: 0 0 20px #00ffc8;
+            transform: translateY(-2px);
+        }
+        
+        .login-box button:active {
+            transform: translateY(0);
+        }
+        
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(to right, transparent, #00ffc8, transparent);
+            animation: scan 5s linear infinite;
+            z-index: 100;
+        }
+        
+        @keyframes scan {
+            0% {
+                top: 0;
+            }
+            50% {
+                top: calc(100% - 2px);
+            }
+            100% {
+                top: 0;
+            }
+        }
+        
+        #adminSection {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 40px;
+            box-sizing: border-box;
+            background-color: rgba(17, 17, 17, 0.8);
+            border-radius: 12px;
+            box-shadow: 0 0 25px rgba(0, 255, 200, 0.3);
+            z-index: 10;
+        }
+        /* Responsive adjustments for mobile */
+        
+        @media (max-width: 768px) {
+            #adminSection {
+                padding: 20px 10px;
+            }
+            .viewer-actions {
+                flex-direction: column;
+            }
+            .search-bar {
+                min-width: 100%;
+            }
+            .viewer-btn {
+                width: 100%;
+            }
+            .login-box {
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="particles-js"></div>
+
+    <div class="login-box-wrapper" id="loginSectionWrapper">
+        <div id="loginSection" class="login-box">
+            <div class="scan-line"></div>
+            <h2>Admin Login</h2>
+            <input type="text" id="username" placeholder="Username">
+            <input type="password" id="password" placeholder="Password">
+            <button id="loginBtn">Login</button>
+        </div>
+    </div>
+
+    <div id="adminSection" style="display:none;">
+        <h2>📋 Submissions Viewer (Admin)</h2>
+        <p id="welcomeMsg"></p>
+
+        <div class="viewer-actions">
+            <input type="text" id="searchInput" class="search-bar" placeholder="Search by name, email, or contact method...">
+            <!-- Emojis added to action buttons -->
+            <button id="refreshSubmissions" class="viewer-btn">🔄 Refresh</button>
+            <button id="exportBtn" class="viewer-btn">💾 Export JSON</button>
+            <button id="exportCsvBtn" class="viewer-btn">📋 Export CSV</button>
+            <button id="clearBtn" class="viewer-btn">⚠️ Clear Submissions</button>
+            <button id="logoutBtn" class="viewer-btn">🚪 Logout</button>
+        </div>
+
+        <div id="emptyState" class="empty-state">No submissions found.</div>
+
+        <div class="table-wrap">
+            <table id="submissionsTable">
+                <thead>
+                    <tr>
+                        <th data-key="name">Name</th>
+                        <th data-key="email">Email</th>
+                        <th data-key="phone">Phone</th>
+                        <th data-key="location">Location</th>
+                        <th data-key="age">Age group</th>
+                        <th data-key="contactMethod">Contact method</th>
+                        <th data-key="timestamp">Date saved</th>
+                    </tr>
+                </thead>
+                <tbody id="submissionsBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // --- JAVASCRIPT: PARTICLE.JS CONFIGURATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            particlesJS('particles-js', {
+                "particles": {
+                    "number": {
+                        "value": 80,
+                        "density": {
+                            "enable": true,
+                            "value_area": 800
+                        }
+                    },
+                    "color": {
+                        "value": "#00ffc8"
+                    },
+                    "shape": {
+                        "type": "polygon",
+                        "nb_sides": 6,
+                        "stroke": {
+                            "width": 1,
+                            "color": "#00ffc8"
+                        },
+                    },
+                    "opacity": {
+                        "value": 0.5,
+                        "random": true
+                    },
+                    "size": {
+                        "value": 3,
+                        "random": true
+                    },
+                    "line_linked": {
+                        "enable": true,
+                        "distance": 150,
+                        "color": "#00ffc8",
+                        "opacity": 0.4,
+                        "width": 1
+                    },
+                    "move": {
+                        "enable": true,
+                        "speed": 2,
+                        "direction": "none",
+                        "random": true,
+                        "straight": false,
+                        "out_mode": "out",
+                    }
+                },
+                "interactivity": {
+                    "detect_on": "canvas",
+                    "events": {
+                        "onhover": {
+                            "enable": true,
+                            "mode": "grab"
+                        },
+                        "resize": true
+                    }
+                },
+                "retina_detect": true
+            });
+        });
+
+        // --- JAVASCRIPT: ADMIN LOGIC WITH PARTICLE FIX & SORTING ENHANCEMENTS ---
+
+        // --- VALID ADMIN CREDENTIALS ---
+        const admins = [{
+                username: "admin",
+                password: "cffAdmin2025"
+            }, // Combination 1
+            {
+                username: "godwin",
+                password: "designMaster"
+            }, // Combination 2
+            {
+                username: "teamlead",
+                password: "securePass123"
+            } // Combination 3
+        ];
+        // ---------------------------------
+
+        let currentSortKey = "timestamp"; // Default sort to date
+        let currentSortAsc = false; // Default sort by newest first (descending timestamp)
+
+        function login() {
+            const user = document.getElementById('username');
+            const pass = document.getElementById('password');
+
+            const match = admins.find(a => a.username === user.value.trim() && a.password === pass.value.trim());
+
+            if (match) {
+                localStorage.setItem("isAdmin", "true");
+                localStorage.setItem("adminUser", user.value.trim());
+                showAdmin();
+                // Using console.log instead of alert for better UI flow
+                console.log(`✅ Logged in as ${user.value.trim()}`);
+            } else {
+                console.error("❌ Invalid credentials");
+                // Clear input fields for retry
+                user.value = '';
+                pass.value = '';
+                // Simple alert to inform the user
+                alert("❌ Invalid credentials. Please check the username and password.");
+            }
+        }
+
+        function showAdmin() {
+            // FIX: Hide particles when content is shown
+            document.getElementById('particles-js').style.display = 'none';
+
+            document.getElementById('loginSectionWrapper').style.display = 'none';
+            document.getElementById('adminSection').style.display = 'block';
+
+            // Adjust body styling for content viewing
+            document.body.style.justifyContent = 'flex-start';
+            document.body.style.alignItems = 'flex-start';
+            document.body.style.padding = '40px';
+            document.body.style.overflowY = 'auto'; // Allow scrolling when content is long
+
+            const user = localStorage.getItem("adminUser");
+            document.getElementById('welcomeMsg').textContent = `Welcome, ${user}`;
+            renderSubmissions();
+            // Apply initial sort indicator
+            document.querySelector(`th[data-key="${currentSortKey}"]`).classList.add(currentSortAsc ? 'sort-asc' : 'sort-desc');
+        }
+
+        function logout() {
+            localStorage.removeItem("isAdmin");
+            localStorage.removeItem("adminUser");
+            document.getElementById('adminSection').style.display = 'none';
+
+            // FIX: Show particles again on logout
+            document.getElementById('particles-js').style.display = 'block';
+
+            document.getElementById('loginSectionWrapper').style.display = 'flex';
+
+            // Adjust body styling back to center login screen
+            document.body.style.justifyContent = 'center';
+            document.body.style.alignItems = 'center';
+            document.body.style.padding = '0';
+            document.body.style.overflowY = 'hidden';
+        }
+
+        function getSubmissions() {
+            try {
+                const raw = localStorage.getItem('cffFormSubmissions');
+                return raw ? JSON.parse(raw) : [];
+            } catch (e) {
+                console.error('Failed to parse submissions', e);
+                return [];
+            }
+        }
+
+        function formatDate(ts) {
+            if (!ts) return '—';
+            const d = new Date(ts);
+            return d.toLocaleString();
+        }
+
+        function renderSubmissions(filter = "") {
+            const body = document.getElementById('submissionsBody');
+            const table = document.getElementById('submissionsTable');
+            const empty = document.getElementById('emptyState');
+
+            body.innerHTML = '';
+            let submissions = getSubmissions();
+
+            // Apply filter
+            submissions = submissions.filter(s => {
+                const text = `${s.name} ${s.email} ${s.contactMethod} ${s.location} ${s.age}`.toLowerCase();
+                return text.includes(filter.toLowerCase());
+            });
+
+            // Apply sorting
+            if (currentSortKey) {
+                submissions.sort((a, b) => {
+                    let valA = a[currentSortKey] || "";
+                    let valB = b[currentSortKey] || "";
+                    if (currentSortKey === "timestamp" || currentSortKey === "age") {
+                        valA = a[currentSortKey] || (currentSortKey === "timestamp" ? 0 : "");
+                        valB = b[currentSortKey] || (currentSortKey === "timestamp" ? 0 : "");
+                    }
+                    if (valA < valB) return currentSortAsc ? -1 : 1;
+                    if (valA > valB) return currentSortAsc ? 1 : -1;
+                    return 0;
+                });
+            }
+
+            if (!submissions.length) {
+                empty.style.display = 'block';
+                table.style.display = 'none';
+                return;
+            }
+
+            empty.style.display = 'none';
+            table.style.display = 'table';
+
+            submissions.forEach((s) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+             <td>${s.name || '—'}</td>
+             <td>${s.email || '—'}</td>
+             <td>${s.phone || '—'}</td>
+             <td>${s.location || '—'}</td>
+             <td>${s.age || '—'}</td>
+             <td>${s.contactMethod || '—'}</td>
+             <td>${formatDate(s.timestamp)}</td>
+         `;
+                body.appendChild(tr);
+            });
+        }
+
+        // Event listeners
+        document.getElementById('loginBtn').addEventListener('click', login);
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+        document.getElementById('refreshSubmissions').addEventListener('click', () => renderSubmissions());
+        document.getElementById('searchInput').addEventListener('input', (e) => renderSubmissions(e.target.value));
+
+        // Export JSON
+        document.getElementById('exportBtn').addEventListener('click', () => {
+            const data = localStorage.getItem('cffFormSubmissions');
+            if (data) {
+                const blob = new Blob([data], {
+                    type: "application/json"
+                });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "cff-submissions.json";
+                a.click();
+                URL.revokeObjectURL(url);
+            } else {
+                alert("No submissions found.");
+            }
+        });
+
+        // Export CSV
+        document.getElementById('exportCsvBtn').addEventListener('click', () => {
+            const submissions = getSubmissions();
+            if (!submissions.length) {
+                alert("No submissions found.");
+                return;
+            }
+
+            const headers = ["Name", "Email", "Phone", "Location", "Age group", "Contact method", "Date saved"];
+            const rows = submissions.map(s => [
+                s.name || "",
+                s.email || "",
+                s.phone || "",
+                s.location || "",
+                s.age || "",
+                s.contactMethod || "",
+                formatDate(s.timestamp)
+            ]);
+
+            const csvContent = [headers, ...rows].map(e => e.map(item => `"${item.replace(/"/g, '""')}"`).join(",")).join("\n");
+            const blob = new Blob([csvContent], {
+                type: "text/csv"
+            });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "cff-submissions.csv";
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        // Clear submissions
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            // Replaced default confirm() with a basic prompt for safety/compliance
+            const confirmAction = prompt("⚠️ To clear ALL submissions, type 'CONFIRM CLEAR' exactly:");
+            if (confirmAction === "CONFIRM CLEAR") {
+                localStorage.removeItem('cffFormSubmissions');
+                renderSubmissions();
+                alert("All submissions cleared.");
+            } else if (confirmAction !== null) {
+                alert("Clear action canceled or input was incorrect.");
+            }
+        });
+
+        // Column sorting with indicator logic
+        document.querySelectorAll('#submissionsTable th').forEach(th => {
+            th.addEventListener('click', () => {
+                const key = th.getAttribute('data-key');
+
+                // Clear previous classes
+                document.querySelectorAll('#submissionsTable th').forEach(h => {
+                    h.classList.remove('sort-asc', 'sort-desc');
+                });
+
+                if (currentSortKey === key) {
+                    currentSortAsc = !currentSortAsc; // toggle direction
+                } else {
+                    currentSortKey = key;
+                    currentSortAsc = true;
+                }
+
+                // Add new class based on direction
+                th.classList.add(currentSortAsc ? 'sort-asc' : 'sort-desc');
+
+                renderSubmissions(document.getElementById('searchInput').value);
+            });
+        });
+
+        // Auto-login if session exists
+        document.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem("isAdmin") === "true") {
+                showAdmin();
+            } else {
+                document.getElementById('loginSectionWrapper').style.display = 'flex';
+                document.body.style.justifyContent = 'center';
+                document.body.style.alignItems = 'center';
+                document.body.style.padding = '0';
+                document.body.style.overflowY = 'hidden';
+            }
+        });
+    </script>
+</body>
+
+</html>
